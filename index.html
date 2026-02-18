@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Study App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            --card-bg: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --primary-color: #3498db;
+            --primary-hover: #2980b9;
+            --success-color: #27ae60;
+            --success-hover: #229954;
+            --danger-color: #e74c3c;
+            --danger-hover: #c0392b;
+            --warning-color: #f39c12;
+            --warning-hover: #e67e22;
+            --border-color: #ecf0f1;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --stat-bg: #f8f9fa;
+        }
+
+        body.dark-mode {
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --card-bg: #2c3e50;
+            --text-primary: #ecf0f1;
+            --text-secondary: #95a5a6;
+            --primary-color: #3498db;
+            --primary-hover: #5dade2;
+            --success-color: #2ecc71;
+            --success-hover: #58d68d;
+            --danger-color: #e74c3c;
+            --danger-hover: #ec7063;
+            --warning-color: #f39c12;
+            --warning-hover: #f8b739;
+            --border-color: #34495e;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --stat-bg: #34495e;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .upload-section {
+            text-align: center;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 18px 36px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            border: 2px solid transparent;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .drag-drop-area {
+            border: 3px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            background: var(--stat-bg);
+            cursor: pointer;
+            margin: 20px 0;
+        }
+
+        .drag-drop-area:hover {
+            border-color: var(--primary-color);
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .drag-drop-area.dragover {
+            border-color: var(--primary-color);
+            background: rgba(52, 152, 219, 0.1);
+            transform: scale(1.02);
+        }
+
+        .drag-drop-area p {
+            color: var(--text-secondary);
+            margin: 10px 0;
+            font-size: 1em;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .mode-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .mode-btn:hover {
+            background: linear-gradient(135deg, #5dade2 0%, #3498db 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #5dade2 100%);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .flashcard {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            perspective: 1000px;
+        }
+
+        .flashcard-inner {
+            width: 100%;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+            background: var(--stat-bg);
+            border-radius: 12px;
+            transition: transform 0.3s;
+            border: 3px solid var(--border-color);
+        }
+
+        .flashcard-inner:hover {
+            transform: scale(1.02);
+            border-color: var(--primary-color);
+        }
+
+        .flashcard-text {
+            font-size: 2.5em;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .khmer-text {
+            font-size: 3em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-know {
+            background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-dont-know {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #ee5a6f 100%);
+            color: white;
+        }
+
+        .btn-flip {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #5dade2 100%);
+            color: white;
+        }
+
+        .btn-download {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: var(--warning-hover);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px 15px;
+            background: var(--stat-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-label {
+            font-size: 0.95em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success-color), var(--primary-color));
+            transition: width 0.3s;
+        }
+
+        .info-text {
+            text-align: center;
+            color: var(--text-secondary);
+            margin: 15px 0;
+            font-size: 1.1em;
+        }
+
+        .direction-indicator {
+            display: inline-block;
+            padding: 6px 12px;
+            background: var(--stat-bg);
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1.2em;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        .keyboard-guide {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .keyboard-guide h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .key-badge {
+            background: var(--stat-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 0.9em;
+            color: var(--primary-color);
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .shortcut-desc {
+            color: var(--text-secondary);
+            font-size: 0.95em;
+        }
+
+        .shortcut-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: var(--stat-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
+        }
+
+        .shortcut-keys {
+            display: flex;
+            gap: 6px;
+            min-width: 150px;
+        }
+
+        .shortcut-keys .key-badge {
+            padding: 4px 10px;
+            font-size: 0.85em;
+            min-width: 36px;
+        }
+
+        .font-customizer {
+            background: var(--stat-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid var(--border-color);
+        }
+
+        .font-customizer h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .font-controls {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .font-control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .font-control-group label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            min-width: 120px;
+        }
+
+        .font-control-group select,
+        .font-control-group input {
+            padding: 8px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .font-control-group select:focus,
+        .font-control-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .font-control-group input[type="range"] {
+            width: 150px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .size-display {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            min-width: 50px;
+        }
+
+        .session-controls {
+            background: var(--stat-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .session-controls h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .session-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .session-input label {
+            color: var(--text-secondary);
+            font-size: 0.95em;
+        }
+
+        .session-input input {
+            padding: 8px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 1em;
+            width: 100px;
+        }
+
+        .session-input button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background 0.3s;
+        }
+
+        .session-input button:hover {
+            background: var(--primary-hover);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item-small {
+            text-align: center;
+            padding: 20px 15px;
+            background: var(--stat-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-item-small .stat-label {
+            font-size: 0.95em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-item-small .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .mode-description {
+            background: var(--stat-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .mode-description strong {
+            color: var(--text-primary);
+        }
+
+        /* Game Styles */
+        .game-board {
+            display: grid;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .matching-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .matching-grid-two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .matching-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .game-card {
+            padding: 20px;
+            background: var(--stat-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 1.3em;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-card.khmer-text {
+            font-family: var(--khmer-font, 'Khmer OS', sans-serif);
+            font-size: 2em;
+        }
+
+        .game-card:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-color);
+        }
+
+        .game-card.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .game-card.matched {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .game-card.wrong {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .typing-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.3em;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .typing-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .choice-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .game-score {
+            text-align: center;
+            font-size: 1.5em;
+            color: var(--primary-color);
+            margin: 20px 0;
+            font-weight: 700;
+        }
+
+        .game-prompt {
+            text-align: center;
+            font-size: 2em;
+            padding: 30px;
+            background: var(--stat-bg);
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 2px solid var(--border-color);
+        }
+
+        .game-prompt.khmer {
+            font-size: 2.5em;
+        }
+
+        .word-list-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .word-list-item .english {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .word-list-item .khmer {
+            font-size: 1.2em;
+            color: var(--text-primary);
+        }
+
+        .word-list-item .reviews {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        @media (max-width: 768px) {
+            .word-list-item {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .flashcard-text {
+                font-size: 2em;
+            }
+            
+            .khmer-text {
+                font-size: 2.3em;
+            }
+
+            .btn {
+                padding: 12px 24px;
+                font-size: 1em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌓</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>📚 Vocabulary Study App</h1>
+            <p>Master your English-Khmer vocabulary with spaced repetition</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="card">
+            <div class="upload-section">
+                <h2>Upload Your Vocabulary</h2>
+                <p class="info-text">Drag and drop your Excel file or click to choose</p>
+                
+                <!-- Drag and Drop Area -->
+                <div class="drag-drop-area" id="dragDropArea">
+                    <p style="font-size: 1.3em;">📁 Drag and Drop Excel File Here</p>
+                    <p>OR</p>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" accept=".xlsx, .xls">
+                        <label class="file-input-label" for="fileInput">Choose File</label>
+                    </div>
+                </div>
+                
+                <p id="fileName" class="info-text"></p>
+            </div>
+        </div>
+
+        <!-- Study Section -->
+        <div id="studySection" class="card hidden">
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="setMode('flashcard')">📚 Flashcard Mode</button>
+                <button class="mode-btn" onclick="setMode('review')">📝 Study Queue</button>
+            </div>
+
+            <div id="modeDescription" class="mode-description">
+                <strong>Flashcard Mode:</strong> Study in focused sessions. Set how many cards you want to practice at a time (great for daily study sessions).
+            </div>
+
+            <!-- Session Controls -->
+            <div class="session-controls">
+                <h3>📊 Session Settings</h3>
+                <div class="session-input">
+                    <label>Cards per session:</label>
+                    <input type="number" id="cardsPerSession" value="20" min="5" max="100">
+                    <button onclick="startSession()">Start New Session</button>
+                    <button onclick="toggleFlashcardDirection()">🔄 <span id="directionToggle">EN → KH</span></button>
+                    <button onclick="shuffleVocabulary()">🔀 Randomize</button>
+                    <button onclick="saveProgress()">💾 Save</button>
+                    <button onclick="loadNewFile()" style="background: var(--warning-color); color: white; padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95em; transition: background 0.3s;">📂 Load New File</button>
+                </div>
+                <div id="saveStatus" style="margin-top: 10px; font-size: 0.9em; color: var(--text-secondary);"></div>
+            </div>
+
+
+
+            <!-- Main Statistics -->
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Total Words</div>
+                    <div class="stat-value" id="totalWords">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Mastered</div>
+                    <div class="stat-value" id="knownWords">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Still Learning</div>
+                    <div class="stat-value" id="learningWords">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Progress</div>
+                    <div class="stat-value" id="progressPercent">0%</div>
+                </div>
+            </div>
+
+            <!-- Detailed Statistics -->
+            <div class="stats-grid">
+                <div class="stat-item-small">
+                    <div class="stat-label">Session Progress</div>
+                    <div class="stat-value" id="sessionProgress">0/20</div>
+                </div>
+                <div class="stat-item-small">
+                    <div class="stat-label">Total Reviews</div>
+                    <div class="stat-value" id="cardsReviewed">0</div>
+                </div>
+                <div class="stat-item-small">
+                    <div class="stat-label">Avg Reviews/Word</div>
+                    <div class="stat-value" id="avgReviews">0</div>
+                </div>
+                <div class="stat-item-small">
+                    <div class="stat-label">Accuracy</div>
+                    <div class="stat-value" id="accuracy">0%</div>
+                </div>
+            </div>
+
+            <!-- Font Customizer - Flashcard Appearance -->
+            <div class="font-customizer">
+                <h3>✏️ Flashcard Appearance</h3>
+                <div class="font-controls">
+                    <div class="font-control-group">
+                        <label for="fontFamily">English Font:</label>
+                        <select id="fontFamily" onchange="updateFlashcardFont()">
+                            <option value="'Segoe UI', Roboto">Default (Segoe UI)</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="'Verdana', sans-serif">Verdana</option>
+                            <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                        </select>
+                    </div>
+                    <div class="font-control-group">
+                        <label for="englishFontSize">English Size:</label>
+                        <input type="range" id="englishFontSize" min="16" max="100" value="40" onchange="updateFlashcardFont()" style="width: 120px;">
+                        <span class="size-display"><span id="englishFontSizeValue">40</span>px</span>
+                    </div>
+                </div>
+                <div class="font-controls" style="margin-top: 15px;">
+                    <div class="font-control-group">
+                        <label for="khmerFont">Khmer Font:</label>
+                        <select id="khmerFont" onchange="updateFlashcardFont()">
+                            <option value="'Khmer OS', sans-serif">Khmer OS</option>
+                            <option value="'Khmer OS Battambang', sans-serif">Khmer OS Battambang</option>
+                            <option value="'Khmer OS Bayon', sans-serif">Khmer OS Bayon</option>
+                            <option value="'Khmer OS Bokor', sans-serif">Khmer OS Bokor</option>
+                            <option value="'Khmer OS Content', sans-serif">Khmer OS Content</option>
+                            <option value="'Khmer OS Dangrek', sans-serif">Khmer OS Dangrek</option>
+                            <option value="'Khmer OS Fasthand', sans-serif">Khmer OS Fasthand</option>
+                            <option value="'Khmer OS Freehand', sans-serif">Khmer OS Freehand</option>
+                            <option value="'Khmer OS Koulen', sans-serif">Khmer OS Koulen</option>
+                            <option value="'Khmer OS Metalchrieng', sans-serif">Khmer OS Metalchrieng</option>
+                            <option value="'Khmer OS Moul', sans-serif">Khmer OS Moul</option>
+                            <option value="'Khmer OS MoulPali', sans-serif">Khmer OS MoulPali</option>
+                            <option value="'Khmer OS Siemreap', sans-serif">Khmer OS Siemreap</option>
+                        </select>
+                    </div>
+                    <div class="font-control-group">
+                        <label for="khmerFontSize">Khmer Size:</label>
+                        <input type="range" id="khmerFontSize" min="16" max="120" value="60" onchange="updateFlashcardFont()" style="width: 120px;">
+                        <span class="size-display"><span id="khmerFontSizeValue">60</span>px</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Word List Viewer -->
+            <div style="margin: 30px 0;">
+                <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+                    <button class="mode-btn" onclick="toggleWordList('mastered')" id="btnMastered">
+                        📗 View Mastered Words
+                    </button>
+                    <button class="mode-btn" onclick="toggleWordList('learning')" id="btnLearning">
+                        📕 View Learning Words
+                    </button>
+                </div>
+                <div id="wordListContainer" class="hidden" style="background: var(--stat-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; max-height: 400px; overflow-y: auto;">
+                    <div id="wordListContent"></div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+
+            <!-- Flashcard -->
+            <div id="flashcardContainer">
+                <div class="flashcard" onclick="flipCard()">
+                    <div class="direction-indicator" id="directionIndicator"></div>
+                    <div class="flashcard-inner">
+                        <div class="flashcard-text" id="cardText"></div>
+                    </div>
+                </div>
+                <p class="info-text">Click the card to flip</p>
+
+                <div class="controls">
+                    <button class="btn btn-dont-know" onclick="markCard(false)">❌ Don't Know</button>
+                    <button class="btn btn-flip" onclick="flipCard()">🔄 Flip</button>
+                    <button class="btn btn-know" onclick="markCard(true)">✓ Know It</button>
+                    <button class="btn" onclick="undoLast()" style="background: var(--warning-color); color: white;">↩️ Undo</button>
+                </div>
+            </div>
+
+            <div class="controls" style="margin-top: 30px;">
+                <button class="btn" onclick="downloadUnknownWords()" style="background: #6c757d; color: white;">⬇️ Download Learning Words</button>
+                <button class="btn" onclick="downloadKnownWords()" style="background: #28a745; color: white;">⬇️ Download Mastered Words</button>
+                <button class="btn" onclick="resetStudy()" style="background: #dc3545; color: white;">🔄 Reset Progress</button>
+            </div>
+
+            <!-- Game Modes Section -->
+            <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid var(--border-color);">
+                <h2 style="text-align: center; color: var(--text-primary); margin-bottom: 20px;">🎮 Language Learning Games</h2>
+                <div class="mode-selector">
+                    <button class="mode-btn" onclick="openGame('matching')" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">🎯 Matching Game</button>
+                    <button class="mode-btn" onclick="openGame('multiple-choice')" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">🎲 Multiple Choice</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Container (Hidden by default) -->
+        <div id="gameContainer" class="card hidden">
+            <button onclick="exitGame()" style="margin-bottom: 20px; padding: 10px 20px; background: var(--text-secondary); color: white; border: none; border-radius: 6px; cursor: pointer;">← Back to Flashcards</button>
+            <div id="gameContent"></div>
+        </div>
+
+        <!-- Keyboard Guide -->
+        <div class="card keyboard-guide">
+            <h3>⌨️ Keyboard Shortcuts</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.95em;">Choose any key combination to control the flashcards:</p>
+            <div>
+                <div class="shortcut-row">
+                    <div class="shortcut-keys">
+                        <span class="key-badge">S</span>
+                        <span style="color: var(--text-secondary);">or</span>
+                        <span class="key-badge">J</span>
+                        <span style="color: var(--text-secondary);">or</span>
+                        <span class="key-badge">←</span>
+                    </div>
+                    <span class="shortcut-desc"><strong>Don't Know</strong> - Mark as still learning</span>
+                </div>
+                <div class="shortcut-row">
+                    <div class="shortcut-keys">
+                        <span class="key-badge">D</span>
+                        <span style="color: var(--text-secondary);">or</span>
+                        <span class="key-badge">K</span>
+                        <span style="color: var(--text-secondary);">or</span>
+                        <span class="key-badge">↓</span>
+                        <span style="color: var(--text-secondary);">or</span>
+                        <span class="key-badge">Space</span>
+                    </div>
+                    <span class="shortcut-desc"><strong>Flip Card</strong> - Reveal the answer</span>
+                </div>
+                <div class="shortcut-row">
+                    <div class="shortcut-keys">
+                        <span class="key-badge">F</span>
+                        <span style="color: var(--text-secondary);">or</span>
+                        <span class="key-badge">L</span>
+                        <span style="color: var(--text-secondary);">or</span>
+                        <span class="key-badge">→</span>
+                    </div>
+                    <span class="shortcut-desc"><strong>Know It</strong> - Mark as mastered</span>
+                </div>
+                <div class="shortcut-row">
+                    <div class="shortcut-keys">
+                        <span class="key-badge">E</span>
+                        <span style="color: var(--text-secondary);">or</span>
+                        <span class="key-badge">I</span>
+                        <span style="color: var(--text-secondary);">or</span>
+                        <span class="key-badge">↑</span>
+                    </div>
+                    <span class="shortcut-desc"><strong>Undo Last</strong> - Revert previous action</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let vocabulary = [];
+        let currentIndex = 0;
+        let showingFront = true;
+        let studyMode = 'flashcard';
+        let cardReviewCount = {};
+        let sessionQueue = [];
+        let sessionSize = 20;
+        let totalReviewed = 0;
+        let correctCount = 0;
+        let actionHistory = []; // Track last action for undo
+        let flashcardReverse = false; // Toggle for KH→EN vs EN→KH
+        let loadedFileName = null; // Track the loaded file
+
+        // Font customization variables
+        let flashcardFontFamily = "'Segoe UI', Roboto";
+        let englishFontSize = 40;
+        let khmerFontFamily = "'Khmer OS', sans-serif";
+        let khmerFontSize = 60;
+
+        // Spaced repetition settings
+        const REPETITION_SCHEDULE = [1, 3, 7, 14]; // Show again after these many cards
+
+        class VocabCard {
+            constructor(data, index) {
+                this.index = index;
+                this.originalDirection = data[0]; // Store original
+                this.originalTargetLang = data[1];
+                
+                // Normalize to always have English first, Khmer second
+                if (data[0] === 'English') {
+                    this.english = data[2];
+                    this.khmer = data[3];
+                    this.direction = 'English';
+                } else {
+                    this.english = data[3];
+                    this.khmer = data[2];
+                    this.direction = 'Khmer';
+                }
+                
+                this.known = false;
+                this.reviewCount = 0;
+                this.lastReviewed = null;
+                this.nextReview = 0;
+            }
+
+            isKhmer(text) {
+                return /[\u1780-\u17FF]/.test(text);
+            }
+
+            // For flashcards - can go either direction
+            getFrontText(reverse = false) {
+                return reverse ? this.khmer : this.english;
+            }
+
+            getBackText(reverse = false) {
+                return reverse ? this.english : this.khmer;
+            }
+
+            // Always return English for games
+            getEnglish() {
+                return this.english;
+            }
+
+            // Always return Khmer for games
+            getKhmer() {
+                return this.khmer;
+            }
+
+            getDirection() {
+                return `EN → KH`;
+            }
+        }
+
+        // File upload handler
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+
+        // Drag and drop handlers
+        const dragDropArea = document.getElementById('dragDropArea');
+        
+        dragDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dragDropArea.classList.add('dragover');
+        });
+
+        dragDropArea.addEventListener('dragleave', () => {
+            dragDropArea.classList.remove('dragover');
+        });
+
+        dragDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragDropArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFile({ target: { files: files } });
+            }
+        });
+
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // Load saved preferences
+        window.addEventListener('load', () => {
+            loadPreferences();
+            loadStoredFile();
+        });
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+
+        function updateFlashcardFont() {
+            flashcardFontFamily = document.getElementById('fontFamily').value;
+            englishFontSize = parseInt(document.getElementById('englishFontSize').value);
+            khmerFontFamily = document.getElementById('khmerFont').value;
+            khmerFontSize = parseInt(document.getElementById('khmerFontSize').value);
+            
+            document.getElementById('englishFontSizeValue').textContent = englishFontSize;
+            document.getElementById('khmerFontSizeValue').textContent = khmerFontSize;
+            
+            const cardText = document.getElementById('cardText');
+            if (cardText) {
+                // Determine which font to use based on content
+                const isKhmer = cardText.classList.contains('khmer-text');
+                if (isKhmer) {
+                    cardText.style.fontFamily = khmerFontFamily;
+                    cardText.style.fontSize = khmerFontSize + 'px';
+                } else {
+                    cardText.style.fontFamily = flashcardFontFamily;
+                    cardText.style.fontSize = englishFontSize + 'px';
+                }
+            }
+            
+            // Save preferences
+            savePreferences();
+        }
+
+        function loadPreferences() {
+            const saved = localStorage.getItem('flashcardPreferences');
+            if (saved) {
+                try {
+                    const prefs = JSON.parse(saved);
+                    flashcardFontFamily = prefs.fontFamily || "'Segoe UI', Roboto";
+                    englishFontSize = prefs.englishFontSize || 40;
+                    khmerFontFamily = prefs.khmerFont || "'Khmer OS', sans-serif";
+                    khmerFontSize = prefs.khmerFontSize || 60;
+                    
+                    document.getElementById('fontFamily').value = flashcardFontFamily;
+                    document.getElementById('englishFontSize').value = englishFontSize;
+                    document.getElementById('englishFontSizeValue').textContent = englishFontSize;
+                    document.getElementById('khmerFont').value = khmerFontFamily;
+                    document.getElementById('khmerFontSize').value = khmerFontSize;
+                    document.getElementById('khmerFontSizeValue').textContent = khmerFontSize;
+                } catch (e) {
+                    console.error('Failed to load preferences:', e);
+                }
+            }
+        }
+
+        function savePreferences() {
+            const prefs = {
+                fontFamily: flashcardFontFamily,
+                englishFontSize: englishFontSize,
+                khmerFont: khmerFontFamily,
+                khmerFontSize: khmerFontSize
+            };
+            localStorage.setItem('flashcardPreferences', JSON.stringify(prefs));
+        }
+
+        function loadStoredFile() {
+            const stored = localStorage.getItem('storedVocabData');
+            const storedFileName = localStorage.getItem('storedFileName');
+            
+            if (stored && storedFileName) {
+                try {
+                    const data = JSON.parse(stored);
+                    vocabulary = data.map((row, index) => new VocabCard(row, index));
+                    loadedFileName = storedFileName;
+                    
+                    if (vocabulary.length > 0) {
+                        document.getElementById('fileName').textContent = `Loaded: ${storedFileName}`;
+                        initializeStudy();
+                    }
+                } catch (e) {
+                    console.error('Failed to load stored file:', e);
+                }
+            }
+        }
+
+        function storeVocabFile(jsonData, fileName) {
+            // Store the parsed data
+            localStorage.setItem('storedVocabData', JSON.stringify(jsonData));
+            localStorage.setItem('storedFileName', fileName);
+            loadedFileName = fileName;
+        }
+
+        function loadNewFile() {
+            // Click the file input to select a new file
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileName').textContent = `Loading: ${file.name}`;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+
+                // Filter valid rows
+                const filteredData = jsonData.filter(row => row.length >= 4 && row[2] && row[3]);
+                
+                vocabulary = filteredData.map((row, index) => new VocabCard(row, index));
+
+                // Store the file data
+                storeVocabFile(filteredData, file.name);
+
+                initializeStudy();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function initializeStudy() {
+            if (vocabulary.length === 0) {
+                alert('No valid vocabulary found in the file!');
+                return;
+            }
+
+            // Apply any saved progress
+            applyProgress();
+
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('studySection').classList.remove('hidden');
+            
+            // Initialize review tracking
+            cardReviewCount = {};
+            vocabulary.forEach(card => {
+                cardReviewCount[card.index] = 0;
+            });
+
+            currentIndex = 0;
+            updateStats();
+            showCard();
+        }
+
+        function startSession() {
+            const size = parseInt(document.getElementById('cardsPerSession').value) || 20;
+            sessionSize = size;
+            
+            // Get unknown cards
+            const unknown = vocabulary.filter(card => !card.known);
+            
+            if (unknown.length === 0) {
+                alert('No more words to study! 🎉');
+                return;
+            }
+
+            // Create session queue with limited number of cards
+            sessionQueue = unknown.slice(0, Math.min(size, unknown.length));
+            currentIndex = 0;
+            
+            alert(`Session started with ${sessionQueue.length} cards!`);
+            updateStats();
+            showCard();
+        }
+
+        function saveProgress() {
+            const progress = {
+                vocabulary: vocabulary.map(card => ({
+                    index: card.index,
+                    english: card.english, // Store for verification
+                    known: card.known,
+                    reviewCount: card.reviewCount,
+                    nextReview: card.nextReview
+                })),
+                totalReviewed: totalReviewed,
+                correctCount: correctCount,
+                timestamp: new Date().toISOString(),
+                vocabHash: hashVocabulary() // Simple hash to verify same file
+            };
+            
+            localStorage.setItem('vocabProgress', JSON.stringify(progress));
+            
+            const statusEl = document.getElementById('saveStatus');
+            statusEl.textContent = '✅ Progress saved! (Will persist when you return to this page)';
+            statusEl.style.color = 'var(--success-color)';
+            setTimeout(() => {
+                statusEl.textContent = '';
+            }, 3000);
+        }
+
+        function hashVocabulary() {
+            // Simple hash based on first few words to verify it's the same file
+            return vocabulary.slice(0, 5).map(c => c.english).join('|');
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('vocabProgress');
+            if (saved) {
+                try {
+                    const progress = JSON.parse(saved);
+                    totalReviewed = progress.totalReviewed || 0;
+                    correctCount = progress.correctCount || 0;
+                    
+                    console.log('Progress loaded from', progress.timestamp);
+                } catch (e) {
+                    console.error('Failed to load progress:', e);
+                }
+            }
+        }
+
+        function applyProgress() {
+            const saved = localStorage.getItem('vocabProgress');
+            if (!saved || vocabulary.length === 0) return;
+            
+            try {
+                const progress = JSON.parse(saved);
+                
+                // Check if this is the same vocabulary file
+                const currentHash = hashVocabulary();
+                if (progress.vocabHash !== currentHash) {
+                    console.log('Different vocabulary file detected - not applying old progress');
+                    const statusEl = document.getElementById('saveStatus');
+                    statusEl.textContent = 'ℹ️ New vocabulary file loaded - previous progress not applied';
+                    statusEl.style.color = 'var(--warning-color)';
+                    setTimeout(() => {
+                        statusEl.textContent = '';
+                    }, 5000);
+                    return;
+                }
+                
+                // Apply saved progress to loaded vocabulary
+                let appliedCount = 0;
+                progress.vocabulary.forEach(savedCard => {
+                    const card = vocabulary.find(c => c.index === savedCard.index && c.english === savedCard.english);
+                    if (card) {
+                        card.known = savedCard.known;
+                        card.reviewCount = savedCard.reviewCount;
+                        card.nextReview = savedCard.nextReview;
+                        appliedCount++;
+                    }
+                });
+                
+                const statusEl = document.getElementById('saveStatus');
+                statusEl.textContent = `✅ Restored progress from ${new Date(progress.timestamp).toLocaleString()} (${appliedCount} cards)`;
+                statusEl.style.color = 'var(--success-color)';
+                setTimeout(() => {
+                    statusEl.textContent = '';
+                }, 5000);
+                
+                console.log(`Progress applied to ${appliedCount} cards`);
+            } catch (e) {
+                console.error('Failed to apply progress:', e);
+            }
+        }
+
+        function shuffleVocabulary() {
+            // Fisher-Yates shuffle
+            for (let i = vocabulary.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [vocabulary[i], vocabulary[j]] = [vocabulary[j], vocabulary[i]];
+            }
+            
+            // Update indices after shuffle
+            vocabulary.forEach((card, idx) => {
+                card.index = idx;
+            });
+            
+            sessionQueue = [];
+            currentIndex = 0;
+            updateStats();
+            showCard();
+            
+            const statusEl = document.getElementById('saveStatus');
+            statusEl.textContent = '🔀 Vocabulary order randomized!';
+            statusEl.style.color = 'var(--primary-color)';
+            setTimeout(() => {
+                statusEl.textContent = '';
+            }, 2000);
+        }
+
+        function toggleWordList(type) {
+            const container = document.getElementById('wordListContainer');
+            const content = document.getElementById('wordListContent');
+            
+            // If clicking the same button, toggle closed
+            const currentType = container.dataset.currentType;
+            if (currentType === type && !container.classList.contains('hidden')) {
+                container.classList.add('hidden');
+                container.dataset.currentType = '';
+                return;
+            }
+            
+            const words = type === 'mastered' 
+                ? vocabulary.filter(card => card.known)
+                : vocabulary.filter(card => !card.known);
+            
+            if (words.length === 0) {
+                content.innerHTML = `<p style="text-align: center; color: var(--text-secondary);">No ${type} words yet.</p>`;
+            } else {
+                content.innerHTML = `
+                    <h3 style="margin-bottom: 15px; color: var(--text-primary);">
+                        ${type === 'mastered' ? '✅ Mastered' : '📚 Still Learning'} (${words.length} words)
+                    </h3>
+                    ${words.map(card => `
+                        <div class="word-list-item">
+                            <div class="english">${card.getEnglish()}</div>
+                            <div class="khmer">${card.getKhmer()}</div>
+                            <div class="reviews">${card.reviewCount} review${card.reviewCount !== 1 ? 's' : ''}</div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+            
+            container.classList.remove('hidden');
+            container.dataset.currentType = type;
+        }
+
+        function downloadKnownWords() {
+            const known = vocabulary.filter(card => card.known);
+            
+            if (known.length === 0) {
+                alert('No mastered words to download yet! Keep studying! 💪');
+                return;
+            }
+
+            const data = known.map(card => [
+                'English',
+                'Khmer',
+                card.getEnglish(),
+                card.getKhmer()
+            ]);
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Mastered Words');
+            
+            const timestamp = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `mastered_words_${timestamp}.xlsx`);
+        }
+
+        function downloadUnknownWords() {
+            const unknown = vocabulary.filter(card => !card.known);
+            
+            if (unknown.length === 0) {
+                alert('No learning words to download! You know everything! 🎉');
+                return;
+            }
+
+            const data = unknown.map(card => [
+                'English',
+                'Khmer',
+                card.getEnglish(),
+                card.getKhmer()
+            ]);
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Learning Words');
+            
+            const timestamp = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `learning_words_${timestamp}.xlsx`);
+        }
+
+        function getNextCard() {
+            // If in session mode and queue exists, use session queue
+            if (studyMode === 'flashcard' && sessionQueue.length > 0) {
+                const unknown = sessionQueue.filter(card => !card.known);
+                if (unknown.length === 0) {
+                    sessionQueue = [];
+                    alert('Session complete! 🎉 Start a new session or continue with all cards.');
+                    return null;
+                }
+                
+                unknown.sort((a, b) => {
+                    if (a.nextReview <= currentIndex && b.nextReview > currentIndex) return -1;
+                    if (b.nextReview <= currentIndex && a.nextReview > currentIndex) return 1;
+                    return a.reviewCount - b.reviewCount;
+                });
+                
+                return unknown[0];
+            }
+
+            // Regular mode - all unknown cards
+            const unknown = vocabulary.filter(card => !card.known);
+            
+            if (unknown.length === 0) {
+                alert('Congratulations! You know all the words! 🎉');
+                return null;
+            }
+
+            // Sort by priority: cards due for review first, then by review count
+            unknown.sort((a, b) => {
+                if (a.nextReview <= currentIndex && b.nextReview > currentIndex) return -1;
+                if (b.nextReview <= currentIndex && a.nextReview > currentIndex) return 1;
+                return a.reviewCount - b.reviewCount;
+            });
+
+            return unknown[0];
+        }
+
+        function showCard() {
+            const card = getNextCard();
+            
+            if (!card) {
+                document.getElementById('cardText').textContent = '🎉 All done!';
+                return;
+            }
+
+            showingFront = true;
+            const cardText = document.getElementById('cardText');
+            const directionIndicator = document.getElementById('directionIndicator');
+            
+            const frontText = card.getFrontText(flashcardReverse);
+            cardText.textContent = frontText;
+            directionIndicator.textContent = flashcardReverse ? 'KH → EN' : 'EN → KH';
+            
+            // Apply Khmer styling if needed and set appropriate font
+            const isKhmer = card.isKhmer(frontText);
+            if (isKhmer) {
+                cardText.classList.add('khmer-text');
+                cardText.style.fontFamily = khmerFontFamily;
+            } else {
+                cardText.classList.remove('khmer-text');
+                cardText.style.fontFamily = flashcardFontFamily;
+            }
+            cardText.style.fontSize = flashcardFontSize + 'px';
+
+            currentIndex++;
+        }
+
+        function flipCard() {
+            const card = getNextCard();
+            if (!card) return;
+
+            showingFront = !showingFront;
+            const cardText = document.getElementById('cardText');
+            
+            const text = showingFront ? card.getFrontText(flashcardReverse) : card.getBackText(flashcardReverse);
+            cardText.textContent = text;
+            
+            // Apply Khmer styling if needed and set appropriate font
+            const isKhmer = card.isKhmer(text);
+            if (isKhmer) {
+                cardText.classList.add('khmer-text');
+                cardText.style.fontFamily = khmerFontFamily;
+            } else {
+                cardText.classList.remove('khmer-text');
+                cardText.style.fontFamily = flashcardFontFamily;
+            }
+            cardText.style.fontSize = flashcardFontSize + 'px';
+        }
+
+        function toggleFlashcardDirection() {
+            flashcardReverse = !flashcardReverse;
+            document.getElementById('directionToggle').textContent = flashcardReverse ? 'KH → EN' : 'EN → KH';
+            showCard();
+        }
+
+        function markCard(known) {
+            const card = getNextCard();
+            if (!card) return;
+
+            // Save state for undo
+            const previousState = {
+                card: card,
+                wasKnown: card.known,
+                previousReviewCount: card.reviewCount,
+                previousNextReview: card.nextReview,
+                totalReviewed: totalReviewed,
+                correctCount: correctCount,
+                currentIndex: currentIndex
+            };
+            actionHistory.push(previousState);
+            
+            // Keep only last 10 actions
+            if (actionHistory.length > 10) {
+                actionHistory.shift();
+            }
+
+            totalReviewed++;
+
+            if (known) {
+                card.known = true;
+                card.reviewCount++;
+                correctCount++;
+            } else {
+                // Schedule for review based on spaced repetition
+                card.reviewCount++;
+                const scheduleIndex = Math.min(card.reviewCount - 1, REPETITION_SCHEDULE.length - 1);
+                card.nextReview = currentIndex + REPETITION_SCHEDULE[scheduleIndex];
+            }
+
+            updateStats();
+            showCard();
+            
+            // Auto-save every 10 cards
+            if (totalReviewed % 10 === 0) {
+                saveProgress();
+            }
+        }
+
+        function undoLast() {
+            if (actionHistory.length === 0) {
+                alert('Nothing to undo!');
+                return;
+            }
+
+            const lastAction = actionHistory.pop();
+            
+            // Restore card state
+            lastAction.card.known = lastAction.wasKnown;
+            lastAction.card.reviewCount = lastAction.previousReviewCount;
+            lastAction.card.nextReview = lastAction.previousNextReview;
+            
+            // Restore counters
+            totalReviewed = lastAction.totalReviewed;
+            correctCount = lastAction.correctCount;
+            currentIndex = lastAction.currentIndex;
+
+            updateStats();
+            showCard();
+        }
+
+        function updateStats() {
+            const known = vocabulary.filter(card => card.known).length;
+            const learning = vocabulary.length - known;
+            const progress = vocabulary.length > 0 ? Math.round((known / vocabulary.length) * 100) : 0;
+            const accuracy = totalReviewed > 0 ? Math.round((correctCount / totalReviewed) * 100) : 0;
+
+            // Calculate average reviews per word
+            const totalCardReviews = vocabulary.reduce((sum, card) => sum + card.reviewCount, 0);
+            const avgReviews = vocabulary.length > 0 ? (totalCardReviews / vocabulary.length).toFixed(1) : 0;
+
+            // Session progress
+            let sessionProgress = '0/0';
+            if (sessionQueue.length > 0) {
+                const sessionKnown = sessionQueue.filter(card => card.known).length;
+                sessionProgress = `${sessionKnown}/${sessionQueue.length}`;
+            }
+
+            document.getElementById('totalWords').textContent = vocabulary.length;
+            document.getElementById('knownWords').textContent = known;
+            document.getElementById('learningWords').textContent = learning;
+            document.getElementById('progressPercent').textContent = progress + '%';
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // Update detailed stats
+            document.getElementById('sessionProgress').textContent = sessionProgress;
+            document.getElementById('cardsReviewed').textContent = totalReviewed;
+            document.getElementById('avgReviews').textContent = avgReviews;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function setMode(mode) {
+            studyMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const descElement = document.getElementById('modeDescription');
+            
+            if (mode === 'flashcard') {
+                // Flashcard mode - limited session
+                sessionQueue = [];
+                document.getElementById('cardsPerSession').value = sessionSize;
+                descElement.innerHTML = '<strong>Flashcard Mode:</strong> Study in focused sessions. Set how many cards you want to practice at a time (great for daily study sessions).';
+            } else if (mode === 'review') {
+                // Review all mode - no session limit
+                sessionQueue = [];
+                descElement.innerHTML = '<strong>Study Queue Mode:</strong> Review all remaining words without session limits. Words you mark as "Don\'t Know" will keep appearing until you master them.';
+            }
+            
+            updateStats();
+            showCard();
+        }
+
+        function downloadUnknownWords() {
+            const unknown = vocabulary.filter(card => !card.known);
+            
+            if (unknown.length === 0) {
+                alert('No unknown words to download! You know everything! 🎉');
+                return;
+            }
+
+            const data = unknown.map(card => [
+                card.direction,
+                card.targetLang,
+                card.front,
+                card.back
+            ]);
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Unknown Words');
+            
+            const timestamp = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `unknown_words_${timestamp}.xlsx`);
+        }
+
+        function resetStudy() {
+            const message = `⚠️ RESET PROGRESS
+            
+This will:
+• Mark all ${vocabulary.length} words as "not mastered"
+• Clear all review counts and statistics
+• Delete your saved progress from browser storage
+• Reset accuracy and session data
+
+Your vocabulary list will remain loaded, but all learning progress will be lost.
+
+Are you sure you want to continue?`;
+
+            if (confirm(message)) {
+                vocabulary.forEach(card => {
+                    card.known = false;
+                    card.reviewCount = 0;
+                    card.nextReview = 0;
+                });
+                currentIndex = 0;
+                sessionQueue = [];
+                totalReviewed = 0;
+                correctCount = 0;
+                actionHistory = [];
+                
+                // Clear saved progress
+                localStorage.removeItem('vocabProgress');
+                
+                updateStats();
+                showCard();
+                
+                const statusEl = document.getElementById('saveStatus');
+                statusEl.textContent = '✅ All progress has been reset. Starting fresh!';
+                statusEl.style.color = 'var(--success-color)';
+                setTimeout(() => {
+                    statusEl.textContent = '';
+                }, 3000);
+            }
+        }
+
+        // ==================== GAME FUNCTIONS ====================
+
+        let currentGame = null;
+        let gameState = {};
+
+        function openGame(gameType) {
+            currentGame = gameType;
+            document.getElementById('studySection').classList.add('hidden');
+            document.getElementById('gameContainer').classList.remove('hidden');
+            
+            // Get words that are not yet mastered for focused learning
+            const unknownWords = vocabulary.filter(card => !card.known);
+            const gameWords = unknownWords.length > 0 ? unknownWords.slice(0, 12) : vocabulary.slice(0, 12);
+            
+            switch(gameType) {
+                case 'matching':
+                    initMatchingGame(gameWords);
+                    break;
+                case 'multiple-choice':
+                    initMultipleChoiceGame(gameWords);
+                    break;
+            }
+        }
+
+        function exitGame() {
+            document.getElementById('gameContainer').classList.add('hidden');
+            document.getElementById('studySection').classList.remove('hidden');
+            currentGame = null;
+            updateStats();
+        }
+        function initMatchingGame(words) {
+            // Use 8 words (4 pairs)
+            const limitedWords = words.slice(0, 8);
+            
+            gameState = {
+                words: limitedWords,
+                selected: null,
+                matched: new Set(),
+                score: 0,
+                reverse: flashcardReverse // Respect session direction setting
+            };
+
+            const html = `
+                <h2 style="text-align: center; color: var(--text-primary);">🎯 Matching Game</h2>
+                <p style="text-align: center; color: var(--text-secondary);">Match words with their translations</p>
+                <div class="game-score">Score: <span id="matchScore">0</span>/${limitedWords.length}</div>
+                <div class="game-board matching-grid-two-column" id="matchingBoard"></div>
+            `;
+            
+            document.getElementById('gameContent').innerHTML = html;
+            renderMatchingBoard();
+        }
+
+        function renderMatchingBoard() {
+            const board = document.getElementById('matchingBoard');
+            const leftCards = [];
+            const rightCards = [];
+            
+            // Create cards - one side has English, other has Khmer
+            gameState.words.forEach((word, idx) => {
+                if (gameState.reverse) {
+                    // KH → EN: Khmer on left, English on right
+                    leftCards.push({ id: `kh-${idx}`, text: word.getKhmer(), pairId: idx, type: 'khmer' });
+                    rightCards.push({ id: `eng-${idx}`, text: word.getEnglish(), pairId: idx, type: 'english' });
+                } else {
+                    // EN → KH: English on left, Khmer on right
+                    leftCards.push({ id: `eng-${idx}`, text: word.getEnglish(), pairId: idx, type: 'english' });
+                    rightCards.push({ id: `kh-${idx}`, text: word.getKhmer(), pairId: idx, type: 'khmer' });
+                }
+            });
+            
+            // Shuffle right side only
+            rightCards.sort(() => Math.random() - 0.5);
+            
+            const leftHtml = leftCards.map(card => {
+                const matched = gameState.matched.has(card.pairId);
+                const selected = gameState.selected?.id === card.id;
+                const isKhmer = card.type === 'khmer';
+                const fontStyle = isKhmer ? `style="font-family: ${khmerFontFamily}; font-size: 1.8em;"` : `style="font-family: ${flashcardFontFamily};"`;
+                return `
+                    <div class="game-card ${matched ? 'matched' : ''} ${selected ? 'selected' : ''} ${isKhmer ? 'khmer-text' : ''}"
+                         onclick="selectMatchCard('${card.id}', ${card.pairId})"
+                         data-pair="${card.pairId}"
+                         ${fontStyle}>
+                        ${card.text}
+                    </div>
+                `;
+            }).join('');
+            
+            const rightHtml = rightCards.map(card => {
+                const matched = gameState.matched.has(card.pairId);
+                const selected = gameState.selected?.id === card.id;
+                const isKhmer = card.type === 'khmer';
+                const fontStyle = isKhmer ? `style="font-family: ${khmerFontFamily}; font-size: 1.8em;"` : `style="font-family: ${flashcardFontFamily};"`;
+                return `
+                    <div class="game-card ${matched ? 'matched' : ''} ${selected ? 'selected' : ''} ${isKhmer ? 'khmer-text' : ''}"
+                         onclick="selectMatchCard('${card.id}', ${card.pairId})"
+                         data-pair="${card.pairId}"
+                         ${fontStyle}>
+                        ${card.text}
+                    </div>
+                `;
+            }).join('');
+            
+            board.innerHTML = `
+                <div class="matching-column">${leftHtml}</div>
+                <div class="matching-column">${rightHtml}</div>
+            `;
+        }
+
+        function selectMatchCard(id, pairId) {
+            if (gameState.matched.has(pairId)) return;
+            
+            if (!gameState.selected) {
+                gameState.selected = { id, pairId };
+            } else if (gameState.selected.id === id) {
+                gameState.selected = null;
+            } else if (gameState.selected.pairId === pairId) {
+                // Match found!
+                gameState.matched.add(pairId);
+                gameState.score++;
+                gameState.selected = null;
+                document.getElementById('matchScore').textContent = gameState.score;
+                
+                if (gameState.matched.size === gameState.words.length) {
+                    setTimeout(() => {
+                        alert('🎉 Congratulations! You matched all pairs!');
+                        exitGame();
+                    }, 500);
+                }
+            } else {
+                // Wrong match
+                gameState.selected = null;
+            }
+            
+            renderMatchingBoard();
+        }
+
+        // MULTIPLE CHOICE
+        function initMultipleChoiceGame(words) {
+            gameState = {
+                words: words,
+                currentIndex: 0,
+                score: 0,
+                showingAnswer: false
+            };
+            
+            renderMultipleChoice();
+        }
+
+        function renderMultipleChoice() {
+            const word = gameState.words[gameState.currentIndex];
+            
+            // Show Khmer word, ask for English answer
+            const correctAnswer = word.getEnglish();
+            
+            // Generate wrong answers from other vocabulary
+            const wrongAnswers = vocabulary
+                .filter(w => w.getEnglish() !== correctAnswer)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3)
+                .map(w => w.getEnglish());
+            
+            const choices = [correctAnswer, ...wrongAnswers].sort(() => Math.random() - 0.5);
+            
+            const html = `
+                <h2 style="text-align: center; color: var(--text-primary);">🎲 Multiple Choice</h2>
+                <p style="text-align: center; color: var(--text-secondary);">Choose the correct English translation</p>
+                <div class="game-score">Score: ${gameState.score}/${gameState.words.length}</div>
+                <div class="game-prompt khmer">${word.getKhmer()}</div>
+                <div class="game-board choice-grid">
+                    ${choices.map((choice) => {
+                        return `<div class="game-card" 
+                                    onclick="selectChoice('${choice.replace(/'/g, "\\'")}', '${correctAnswer.replace(/'/g, "\\'")}')">
+                                ${choice}
+                            </div>`;
+                    }).join('')}
+                </div>
+                <div id="choiceFeedback" style="text-align: center; margin-top: 20px; font-size: 1.2em;"></div>
+            `;
+            
+            document.getElementById('gameContent').innerHTML = html;
+        }
+
+        function selectChoice(selected, correct) {
+            if (gameState.showingAnswer) return;
+            
+            const feedback = document.getElementById('choiceFeedback');
+            const isCorrect = selected === correct;
+            
+            if (isCorrect) {
+                gameState.score++;
+                feedback.innerHTML = `<span style="color: var(--success-color);">✓ Correct!</span>`;
+            } else {
+                feedback.innerHTML = `<span style="color: var(--danger-color);">✗ Incorrect</span><br>
+                                      <span style="color: var(--text-secondary);">Correct answer: <strong>${correct}</strong></span>`;
+            }
+            
+            gameState.showingAnswer = true;
+            
+            setTimeout(() => {
+                gameState.currentIndex++;
+                gameState.showingAnswer = false;
+                
+                if (gameState.currentIndex >= gameState.words.length) {
+                    alert(`🎉 Game complete! Score: ${gameState.score}/${gameState.words.length}`);
+                    exitGame();
+                } else {
+                    renderMultipleChoice();
+                }
+            }, 1500);
+        }
+
+        // ==================== END GAME FUNCTIONS ====================
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('studySection').classList.contains('hidden')) return;
+
+            const key = e.key.toLowerCase();
+
+            // Flip card
+            if (key === ' ' || key === 'enter' || key === 'd' || key === 'k' || key === 'arrowdown') {
+                e.preventDefault();
+                flipCard();
+            } 
+            // Know it
+            else if (key === 'arrowright' || key === 'f' || key === 'l') {
+                e.preventDefault();
+                markCard(true);
+            } 
+            // Don't know
+            else if (key === 'arrowleft' || key === 's' || key === 'j') {
+                e.preventDefault();
+                markCard(false);
+            }
+            // Undo
+            else if (key === 'i' || key === 'e' || key === 'arrowup') {
+                e.preventDefault();
+                undoLast();
+            }
+        });
+    </script>
+</body>
+</html>
